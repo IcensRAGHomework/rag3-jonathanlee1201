@@ -1,10 +1,13 @@
 import datetime
 import chromadb
 import traceback
+import pandas as pd
 
 from chromadb.utils import embedding_functions
 
 from model_configurations import get_model_configuration
+
+from datetime import datetime
 
 gpt_emb_version = 'text-embedding-ada-002'
 gpt_emb_config = get_model_configuration(gpt_emb_version)
@@ -12,7 +15,40 @@ gpt_emb_config = get_model_configuration(gpt_emb_version)
 dbpath = "./"
 
 def generate_hw01():
-    pass
+    df = pd.read_csv('COA_OpenData.csv')
+
+    # init ChromaDB
+    client = chromadb.Client()
+
+    # create Collection
+    collection = client.create_collection(
+        name="TRAVEL",
+        metadata={"hnsw:space": "cosine"}
+    )
+
+    # add data to Collection
+    for index, row in df.iterrows():
+        metadata = {
+            "file_name": "COA_OpenData.csv",
+            "name": row['Name'],
+            "type": row['Type'],
+            "address": row['Address'],
+            "tel": row['Tel'],
+            "city": row['City'],
+            "town": row['Town'],
+            "date": int(datetime.strptime(row['CreateDate'], '%Y-%m-%d').timestamp()),
+        }
+
+        document = row['HostWords']
+
+        collection.add(
+            ids=str(index),
+            documents=document,
+            metadatas=metadata
+        )
+
+    return collection
+
     
 def generate_hw02(question, city, store_type, start_date, end_date):
     pass
@@ -36,3 +72,6 @@ def demo(question):
     )
     
     return collection
+
+if __name__ == "__main__":
+    generate_hw01()
