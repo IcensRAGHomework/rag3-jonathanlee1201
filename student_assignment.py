@@ -2,6 +2,7 @@ import datetime
 import chromadb
 import traceback
 import pandas as pd
+import sqlite3
 
 from chromadb.utils import embedding_functions
 
@@ -15,6 +16,24 @@ gpt_emb_config = get_model_configuration(gpt_emb_version)
 dbpath = "./"
 
 def generate_hw01():
+    conn = sqlite3.connect('chroma.sqlite3')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS travel (
+        id INTEGER PRIMARY KEY,
+        file_name TEXT,
+        name TEXT,
+        type TEXT,
+        address TEXT,
+        tel TEXT,
+        city TEXT,
+        town TEXT,
+        date INTEGER,
+        document TEXT
+    )
+    ''')
+
     df = pd.read_csv('COA_OpenData.csv')
 
     # init ChromaDB
@@ -46,6 +65,15 @@ def generate_hw01():
             documents=document,
             metadatas=metadata
         )
+
+        cursor.execute('''
+        INSERT INTO travel (file_name, name, type, address, tel, city, town, date, document)
+        VALUES (:file_name, :name, :type, :address, :tel, :city, :town, :date, :document)
+        ''', {**metadata, "document": document})
+
+    # commit
+    conn.commit()
+    conn.close()
 
     return collection
 
