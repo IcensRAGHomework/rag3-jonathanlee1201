@@ -10,41 +10,29 @@ from model_configurations import get_model_configuration
 
 from datetime import datetime
 
+dbpath = "./"
+
 gpt_emb_version = 'text-embedding-ada-002'
 gpt_emb_config = get_model_configuration(gpt_emb_version)
 
-dbpath = "./"
-
-def generate_hw01():
-    conn = sqlite3.connect('chroma.sqlite3')
-    cursor = conn.cursor()
-
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS travel (
-        id INTEGER PRIMARY KEY,
-        file_name TEXT,
-        name TEXT,
-        type TEXT,
-        address TEXT,
-        tel TEXT,
-        city TEXT,
-        town TEXT,
-        date INTEGER,
-        document TEXT
+def generate_db():
+    chroma_client = chromadb.PersistentClient(path=dbpath)
+    openai_ef = embedding_functions.OpenAIEmbeddingFunction(
+        api_key = gpt_emb_config['api_key'],
+        api_base = gpt_emb_config['api_base'],
+        api_type = gpt_emb_config['openai_type'],
+        api_version = gpt_emb_config['api_version'],
+        deployment_id = gpt_emb_config['deployment_name']
     )
-    ''')
+
+    collection = chroma_client.get_or_create_collection(
+    name="TRAVEL",
+    metadata={"hnsw:space": "cosine"},
+    embedding_function=openai_ef
+    )
 
     df = pd.read_csv('COA_OpenData.csv')
-
-    # init ChromaDB
-    client = chromadb.Client()
-
-    # create Collection
-    collection = client.create_collection(
-        name="TRAVEL",
-        metadata={"hnsw:space": "cosine"}
-    )
-
+    
     # add data to Collection
     for index, row in df.iterrows():
         metadata = {
@@ -66,15 +54,25 @@ def generate_hw01():
             metadatas=metadata
         )
 
-        cursor.execute('''
-        INSERT INTO travel (file_name, name, type, address, tel, city, town, date, document)
-        VALUES (:file_name, :name, :type, :address, :tel, :city, :town, :date, :document)
-        ''', {**metadata, "document": document})
+    return collection
 
-    # commit
-    conn.commit()
-    conn.close()
 
+
+def generate_hw01():
+    chroma_client = chromadb.PersistentClient(path=dbpath)
+    openai_ef = embedding_functions.OpenAIEmbeddingFunction(
+        api_key = gpt_emb_config['api_key'],
+        api_base = gpt_emb_config['api_base'],
+        api_type = gpt_emb_config['openai_type'],
+        api_version = gpt_emb_config['api_version'],
+        deployment_id = gpt_emb_config['deployment_name']
+    )
+    collection = chroma_client.get_or_create_collection(
+        name="TRAVEL",
+        metadata={"hnsw:space": "cosine"},
+        embedding_function=openai_ef
+    )
+    
     return collection
 
     
@@ -102,4 +100,8 @@ def demo(question):
     return collection
 
 if __name__ == "__main__":
-    generate_hw01()
+    #create_database()
+    
+    #Collection
+    collection = generate_hw01()
+    print("Collection created with metadata and documents.")
