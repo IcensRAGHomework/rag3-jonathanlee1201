@@ -170,5 +170,5 @@ if __name__ == "__main__":
     start_date = datetime(2024, 4, 1)
     end_date = datetime(2024, 5, 1)
 
-    results = generate_hw02(question, city, store_type, start_date, end_date)
-    print(results)
+    #results = generate_hw02(question, city, store_type, start_date, end_date)
+    #print(results)
