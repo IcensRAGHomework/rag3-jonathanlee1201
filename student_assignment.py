@@ -191,7 +191,7 @@ def generate_hw03(question, store_name, new_store_name, city, store_type):
         type_n = metadata.get("type", "Unknown")
         print("List:", name, new_name_n, similarity, city_n, type_n)
 
-        if similarity >= 0.7: 
+        if similarity >= 0.8: 
             if city and metadata.get("city", "Unknown") not in city: 
                 continue
             if store_type and metadata.get("type", "Unknown") not in store_type:
